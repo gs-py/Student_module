@@ -3,7 +3,7 @@ import supabase from "./supabase";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { FiMail, FiLock, FiShield } from "react-icons/fi";
+import { FiMail, FiLock, } from "react-icons/fi";
 
 // First, import the font
 // Remove these lines
