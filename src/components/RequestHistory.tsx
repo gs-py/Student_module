@@ -58,7 +58,9 @@ export default function RequestHistory({ userId }: RequestHistoryProps) {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setRequests(data || []);
+      setRequests(
+        (data as unknown as CartRequest[]) || []
+      );
     } catch (error) {
       console.error("Error fetching requests:", error);
     } finally {
