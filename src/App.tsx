@@ -3,6 +3,7 @@ import supabase from "./supabase";
 import Login from "./Login";
 import Dashboard from "./Dashboard";
 import { Session } from "@supabase/supabase-js";
+import { Toaster } from "react-hot-toast";
 
 function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -22,9 +23,12 @@ function App() {
   }, []);
 
   return session ? (
-    <Dashboard user={session.user} />
+    <>  <Dashboard user={session.user} />
+     <Toaster position="top-right" /></>
+  
   ) : (
-    <Login />
+      <Login />
+      
   );
 }
 
