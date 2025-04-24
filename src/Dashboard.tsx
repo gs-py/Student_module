@@ -29,16 +29,14 @@ interface Transaction {
   quantity: number;
 }
 
-// Update the CartItem interface
 interface CartItem {
-  id: number;          // Add this
-  cart_id: number;     // Add this
+  id: number;
+  cart_id: number;
   inventory_id: number;
   quantity: number;
   inventory: InventoryItem;
+  return_date: string | null;
 }
-
-// Update the fetchCart function
 
 interface Cart {
   id: number;
@@ -187,40 +185,63 @@ const fetchCart = async () => {
 
 
   // Add to cart with quantity
-  const addToCart = async (
-    inventoryItem: InventoryItem,
-    quantity: number = 1
-  ) => {
+  // Add these helper functions
+  const getDefaultReturnDate = () => {
+    const date = new Date();
+    date.setDate(date.getDate() + 7);
+    return date.toISOString().split('T')[0];
+  };
+  
+  const updateReturnDate = async (itemId: number, newDate: string) => {
+    try {
+      const { error } = await supabase
+        .from('cart_items')
+        .update({ return_date: newDate })
+        .eq('id', itemId);
+      
+      if (error) throw error;
+      await fetchCart();
+      toast.success('Return date updated');
+    } catch (error) {
+      console.error('Error updating return date:', error);
+      toast.error('Failed to update return date');
+    }
+  };
+  
+  // Update addToCart function
+  const addToCart = async (inventoryItem: InventoryItem, quantity: number = 1) => {
     try {
       if (!cart) return;
-
+  
       const existingItem = cartItems.find(
         (item) => item.inventory_id === inventoryItem.id
       );
-
+  
       if (existingItem) {
         const newQuantity = existingItem.quantity + quantity;
-        if (newQuantity <= 0) return; // Prevent negative or zero quantity
+        if (newQuantity <= 0) return;
         const { error } = await supabase
           .from("cart_items")
           .update({ quantity: newQuantity })
           .eq("cart_id", cart.id)
           .eq("inventory_id", inventoryItem.id);
         if (error) throw error;
+        toast.success(`Updated ${inventoryItem.name} quantity in cart`);
       } else {
         if (quantity <= 0) return;
         const { error } = await supabase.from("cart_items").insert({
           cart_id: cart.id,
           inventory_id: inventoryItem.id,
           quantity,
+          return_date: getDefaultReturnDate() // Add default return date
         });
         if (error) throw error;
-         toast.success(`Added ${inventoryItem.name} to cart`);
+        toast.success(`Added ${inventoryItem.name} to cart`);
       }
       await fetchCart();
     } catch (error) {
       console.error("Error adding to cart:", error);
-       toast.error("Failed to update cart");
+      toast.error("Failed to update cart");
     }
   };
 
@@ -277,9 +298,11 @@ const fetchCart = async () => {
       //     setCartItems([]);
       //   }
       // }
-     await fetchCart();
+      await fetchCart();
+      toast.success("Cart submitted for approval");
     } catch (error) {
       console.error("Error submitting cart:", error);
+      toast.error("Failed to submit cart");
     }
   };
   // Quantity input handler
@@ -535,7 +558,7 @@ const fetchCart = async () => {
                     </h2>
                     <button
                       onClick={fetchCart}
-                      className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium border text-blue-500 bg-blue-600  rounded-md hover:bg-red-500 transition-colors duration-300 ease-in"
+                      className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium border text-blue-500 bg-blue-600  hover:scale-95  transition-all duration-200 ease-in-out rounded-md hover:bg-red-600 hover:text-red-500"
                     >
                       <RefreshCw className="h-4 w-4" />
                       Refresh Cart
@@ -545,6 +568,7 @@ const fetchCart = async () => {
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead>
+                       
                         <tr className="bg-gray-50">
                           <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
                             Item
@@ -553,12 +577,41 @@ const fetchCart = async () => {
                             Quantity
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                            Return Date
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
                             Actions
                           </th>
                         </tr>
+                        
+                       
+                        {cartItems.map((item) => (
+                          <tr key={item.inventory_id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4">{item.inventory.name}</td>
+                            <td className="px-6 py-4">{item.quantity}</td>
+                            <td className="px-6 py-4">
+                              <input
+                                type="date"
+                                value={item.return_date || getDefaultReturnDate()}
+                                min={new Date().toISOString().split('T')[0]}
+                                onChange={(e) => updateReturnDate(item.id, e.target.value)}
+                                className="px-2 py-1 border rounded-md text-sm"
+                              />
+                            </td>
+                            <td className="px-6 py-4">
+                              <Button
+                                onClick={() => removeFromCart(item.inventory_id)}
+                                size="sm"
+                                className="bg-red-300 text-black border border-red-400  hover:text-red-500 hover:border-black transition-all duration-200 ease-in-out hover:scale-90"
+                              >
+                                Remove
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
                       </thead>
                       <tbody>
-                        {cartItems.map((item) => (
+                        {/* {cartItems.map((item) => (
                           <tr
                             key={item.inventory_id}
                             className="hover:bg-gray-50"
@@ -577,7 +630,7 @@ const fetchCart = async () => {
                               </Button>
                             </td>
                           </tr>
-                        ))}
+                        ))} */}
                       </tbody>
                     </table>
                     {cartItems.length > 0 && (
@@ -585,11 +638,11 @@ const fetchCart = async () => {
                         <button
                           onClick={submitCartRequest}
                           disabled={cart?.status !== "draft"}
-                          className={`px-4 py-2 font-medium rounded-md ${
+                          className={`px-4 py-2 font-medium rounded-md hover:text-black hover:border hover:border-red-500 active:scale-90 hover:scale-95 ${
                             cart?.status !== "draft"
                               ? "bg-gray-300 cursor-not-allowed"
                               : "bg-green-500 hover:bg-green-600 text-black"
-                          } transition-colors text-red-500`}
+                          }  text-red-500 transition-all duration-300 ease-in-out`}
                         >
                           Submit Request
                         </button>
