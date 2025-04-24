@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RefreshCw } from "lucide-react";
 import { Toaster, toast } from "react-hot-toast";
+import RequestHistory from "./components/RequestHistory";
 interface DashboardProps {
   user: User;
 }
@@ -435,10 +436,11 @@ const fetchCart = async () => {
         <main className="flex-1 overflow-hidden p-6 bg-gray-50">
           <div className="max-w-7xl mx-auto h-full">
             <Tabs defaultValue="inventory" className="h-full flex flex-col">
-              <TabsList className="grid w-full grid-cols-3 mb-6 bg-white shadow-sm">
+              <TabsList className="grid w-full grid-cols-4 mb-6 bg-white shadow-sm">
                 <TabsTrigger value="inventory">Inventory</TabsTrigger>
                 <TabsTrigger value="cart">Cart</TabsTrigger>
                 <TabsTrigger value="transactions">Transactions</TabsTrigger>
+                <TabsTrigger value="requests">Requests History</TabsTrigger>
               </TabsList>
 
               {/* Inventory Tab */}
@@ -514,7 +516,7 @@ const fetchCart = async () => {
                                   className="w-16 px-2 py-1 border rounded-md text-sm"
                                   disabled={item.remaining_quantity <= 0}
                                 />
-                           
+
                                 <button
                                   onClick={() =>
                                     addToCart(
@@ -568,7 +570,6 @@ const fetchCart = async () => {
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead>
-                       
                         <tr className="bg-gray-50">
                           <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
                             Item
@@ -583,24 +584,32 @@ const fetchCart = async () => {
                             Actions
                           </th>
                         </tr>
-                        
-                       
+
                         {cartItems.map((item) => (
-                          <tr key={item.inventory_id} className="hover:bg-gray-50">
+                          <tr
+                            key={item.inventory_id}
+                            className="hover:bg-gray-50"
+                          >
                             <td className="px-6 py-4">{item.inventory.name}</td>
                             <td className="px-6 py-4">{item.quantity}</td>
                             <td className="px-6 py-4">
                               <input
                                 type="date"
-                                value={item.return_date || getDefaultReturnDate()}
-                                min={new Date().toISOString().split('T')[0]}
-                                onChange={(e) => updateReturnDate(item.id, e.target.value)}
+                                value={
+                                  item.return_date || getDefaultReturnDate()
+                                }
+                                min={new Date().toISOString().split("T")[0]}
+                                onChange={(e) =>
+                                  updateReturnDate(item.id, e.target.value)
+                                }
                                 className="px-2 py-1 border rounded-md text-sm"
                               />
                             </td>
                             <td className="px-6 py-4">
                               <Button
-                                onClick={() => removeFromCart(item.inventory_id)}
+                                onClick={() =>
+                                  removeFromCart(item.inventory_id)
+                                }
                                 size="sm"
                                 className="bg-red-300 text-black border border-red-400  hover:text-red-500 hover:border-black transition-all duration-200 ease-in-out hover:scale-90"
                               >
@@ -736,6 +745,9 @@ const fetchCart = async () => {
                     </table>
                   </div>
                 </div>
+              </TabsContent>
+              <TabsContent value="requests" className="flex-1 overflow-auto">
+                <RequestHistory userId={user.id} />
               </TabsContent>
             </Tabs>
           </div>
