@@ -28,6 +28,9 @@ interface Transaction {
   status: string;
   inventory: InventoryItem;
   quantity: number;
+  damaged_quantity: number | null;
+  fine_amount: number | null;
+  damage_image_url: string ;
 }
 
 interface CartItem {
@@ -692,6 +695,12 @@ const fetchCart = async () => {
                             Quantity Taken
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Damaged
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Fine
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                             Borrow Date
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -699,6 +708,9 @@ const fetchCart = async () => {
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                             Status
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Damage Image
                           </th>
                         </tr>
                       </thead>
@@ -713,6 +725,18 @@ const fetchCart = async () => {
                             </td>
                             <td className="px-6 py-4 text-gray-700">
                               {transaction.quantity}
+                            </td>
+                            <td className="px-6 py-4 text-gray-700">
+                              {transaction.damaged_quantity || 0}
+                            </td>
+                            <td className="px-6 py-4 text-gray-700">
+                              {transaction.fine_amount ? (
+                                <span className="text-red-600 font-medium">
+                                  ${transaction.fine_amount.toFixed(2)}
+                                </span>
+                              ) : (
+                                "-"
+                              )}
                             </td>
                             <td className="px-6 py-4 text-gray-700">
                               {new Date(
@@ -738,6 +762,27 @@ const fetchCart = async () => {
                               >
                                 {transaction.status}
                               </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              {transaction.damage_image_url ? (
+                                <button
+                                  onClick={() =>
+                                    window.open(
+                                      transaction.damage_image_url,
+                                      "_blank"
+                                    )
+                                  }
+                                  className="text-blue-500 hover:text-blue-700 transition-colors"
+                                >
+                                  <img
+                                    src={transaction.damage_image_url}
+                                    alt="Damage"
+                                    className="w-10 h-10 object-cover rounded-md hover:opacity-80 transition-opacity"
+                                  />
+                                </button>
+                              ) : (
+                                "-"
+                              )}
                             </td>
                           </tr>
                         ))}
